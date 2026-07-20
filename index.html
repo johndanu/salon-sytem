@@ -1,0 +1,1784 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=2.0">
+<title>Sharp & Fade — Shop Manager</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/lucide@latest/dist/umd/lucide.js" onerror="this.onerror=null;this.src='https://unpkg.com/lucide@latest/dist/umd/lucide.js';"></script>
+<style>
+  * { -webkit-tap-highlight-color: transparent; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; }
+  ::-webkit-scrollbar { width: 8px; height: 8px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: #d1d5db; border-radius: 8px; }
+  .no-scrollbar::-webkit-scrollbar { display: none; }
+  [data-view-btn].active { background-color: #be123c; color: white; }
+  [data-view-btn].active svg { color: white; }
+  [data-view-btn]:not(.active) { color: #4b5563; }
+  .fade-in { animation: fadeIn .18s ease-out; }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
+  input:focus, select:focus, textarea:focus, button:focus-visible { outline: 2px solid #be123c; outline-offset: 2px; }
+  @media print {
+    #sidebar, #topbar, #mobile-bottom-nav, #storage-warning, .no-print { display: none !important; }
+    #main-content { padding: 0 !important; overflow: visible !important; }
+    body, html { background: white !important; height: auto !important; }
+    #app { display: block !important; height: auto !important; }
+  }
+</style>
+</head>
+<body class="bg-gray-50 text-gray-900 h-screen overflow-hidden">
+
+<div id="app" class="flex h-screen overflow-hidden">
+
+  <!-- ===================== SIDEBAR ===================== -->
+  <aside id="sidebar" class="hidden sm:flex sm:w-52 lg:w-64 bg-white border-r border-gray-200 flex-col shrink-0">
+    <div class="h-20 flex items-center px-5 lg:px-6 border-b border-gray-200">
+      <div class="w-10 h-10 rounded-xl bg-rose-700 text-white flex items-center justify-center shrink-0">
+        <i data-lucide="scissors" class="w-5 h-5"></i>
+      </div>
+      <span id="shop-name-label" class="ml-3 font-bold text-lg leading-tight truncate"></span>
+    </div>
+
+    <nav class="flex-1 overflow-y-auto no-scrollbar py-4 px-2 lg:px-3 space-y-1">
+      <button data-view-btn data-action="nav" data-view="dashboard" class="w-full flex items-center gap-3 px-3 py-3.5 rounded-xl font-semibold text-sm lg:text-base transition-colors">
+        <i data-lucide="layout-dashboard" class="w-6 h-6 shrink-0"></i>
+        <span>Dashboard</span>
+      </button>
+      <button data-view-btn data-action="nav" data-view="neworder" class="w-full flex items-center gap-3 px-3 py-3.5 rounded-xl font-semibold text-sm lg:text-base transition-colors">
+        <i data-lucide="circle-plus" class="w-6 h-6 shrink-0"></i>
+        <span>New Order</span>
+      </button>
+      <button data-view-btn data-action="nav" data-view="history" class="w-full flex items-center gap-3 px-3 py-3.5 rounded-xl font-semibold text-sm lg:text-base transition-colors">
+        <i data-lucide="history" class="w-6 h-6 shrink-0"></i>
+        <span>Order History</span>
+      </button>
+      <button data-view-btn data-action="nav" data-view="customers" class="w-full flex items-center gap-3 px-3 py-3.5 rounded-xl font-semibold text-sm lg:text-base transition-colors">
+        <i data-lucide="users" class="w-6 h-6 shrink-0"></i>
+        <span>Customers</span>
+      </button>
+      <button data-view-btn data-action="nav" data-view="barbers" class="w-full flex items-center gap-3 px-3 py-3.5 rounded-xl font-semibold text-sm lg:text-base transition-colors">
+        <i data-lucide="user-round" class="w-6 h-6 shrink-0"></i>
+        <span>Barbers</span>
+      </button>
+      <button data-view-btn data-action="nav" data-view="services" class="w-full flex items-center gap-3 px-3 py-3.5 rounded-xl font-semibold text-sm lg:text-base transition-colors">
+        <i data-lucide="list-checks" class="w-6 h-6 shrink-0"></i>
+        <span>Services</span>
+      </button>
+      <button data-view-btn data-action="nav" data-view="reports" class="w-full flex items-center gap-3 px-3 py-3.5 rounded-xl font-semibold text-sm lg:text-base transition-colors">
+        <i data-lucide="bar-chart-3" class="w-6 h-6 shrink-0"></i>
+        <span>Reports</span>
+      </button>
+    </nav>
+
+    <div class="p-2 lg:p-3 border-t border-gray-200">
+      <button data-action="open-settings" class="w-full flex items-center gap-3 px-3 py-3.5 rounded-xl font-semibold text-sm lg:text-base text-gray-500 hover:bg-gray-100 transition-colors">
+        <i data-lucide="settings" class="w-6 h-6 shrink-0"></i>
+        <span>Settings</span>
+      </button>
+    </div>
+  </aside>
+
+  <!-- ===================== MAIN COLUMN ===================== -->
+  <div class="flex-1 flex flex-col overflow-hidden">
+    <header id="topbar" class="h-16 sm:h-20 bg-white border-b border-gray-200 flex items-center justify-between px-4 sm:px-5 lg:px-8 shrink-0">
+      <h1 id="page-title" class="text-lg sm:text-xl lg:text-2xl font-bold text-gray-900 truncate">Dashboard</h1>
+      <div class="flex items-center gap-3 shrink-0">
+        <div class="text-right hidden md:block">
+          <div id="topbar-date" class="text-sm text-gray-500"></div>
+        </div>
+        <button data-action="start-new-order" class="hidden sm:flex items-center gap-2 bg-rose-700 hover:bg-rose-800 text-white font-semibold px-4 lg:px-5 py-3 rounded-xl transition-colors text-sm lg:text-base">
+          <i data-lucide="circle-plus" class="w-5 h-5"></i>
+          <span>New Order</span>
+        </button>
+      </div>
+    </header>
+
+    <div id="storage-warning" class="hidden bg-amber-50 border-b border-amber-200 text-amber-800 text-sm px-4 sm:px-8 py-2.5 flex items-center gap-2 shrink-0">
+      <i data-lucide="alert-triangle" class="w-4 h-4 shrink-0"></i>
+      <span>This device can't save data right now, so changes won't be kept after you close this page.</span>
+    </div>
+
+    <main id="main-content" class="flex-1 overflow-y-auto p-4 pb-28 sm:p-5 sm:pb-5 lg:p-8"></main>
+  </div>
+
+  <!-- ===================== MOBILE BOTTOM NAV (phones only) ===================== -->
+  <nav id="mobile-bottom-nav" class="sm:hidden fixed bottom-0 inset-x-0 bg-white border-t border-gray-200 z-40 overflow-x-auto no-scrollbar">
+    <div class="flex min-w-max">
+      <button data-view-btn data-action="nav" data-view="dashboard" class="flex flex-col items-center justify-center gap-1 min-w-[74px] px-3 py-2.5 rounded-xl m-1 font-semibold transition-colors">
+        <i data-lucide="layout-dashboard" class="w-5 h-5"></i>
+        <span class="text-[11px]">Dashboard</span>
+      </button>
+      <button data-view-btn data-action="nav" data-view="neworder" class="flex flex-col items-center justify-center gap-1 min-w-[74px] px-3 py-2.5 rounded-xl m-1 font-semibold transition-colors">
+        <i data-lucide="circle-plus" class="w-5 h-5"></i>
+        <span class="text-[11px]">New Order</span>
+      </button>
+      <button data-view-btn data-action="nav" data-view="history" class="flex flex-col items-center justify-center gap-1 min-w-[74px] px-3 py-2.5 rounded-xl m-1 font-semibold transition-colors">
+        <i data-lucide="history" class="w-5 h-5"></i>
+        <span class="text-[11px]">History</span>
+      </button>
+      <button data-view-btn data-action="nav" data-view="customers" class="flex flex-col items-center justify-center gap-1 min-w-[74px] px-3 py-2.5 rounded-xl m-1 font-semibold transition-colors">
+        <i data-lucide="users" class="w-5 h-5"></i>
+        <span class="text-[11px]">Customers</span>
+      </button>
+      <button data-view-btn data-action="nav" data-view="barbers" class="flex flex-col items-center justify-center gap-1 min-w-[74px] px-3 py-2.5 rounded-xl m-1 font-semibold transition-colors">
+        <i data-lucide="user-round" class="w-5 h-5"></i>
+        <span class="text-[11px]">Barbers</span>
+      </button>
+      <button data-view-btn data-action="nav" data-view="services" class="flex flex-col items-center justify-center gap-1 min-w-[74px] px-3 py-2.5 rounded-xl m-1 font-semibold transition-colors">
+        <i data-lucide="list-checks" class="w-5 h-5"></i>
+        <span class="text-[11px]">Services</span>
+      </button>
+      <button data-view-btn data-action="nav" data-view="reports" class="flex flex-col items-center justify-center gap-1 min-w-[74px] px-3 py-2.5 rounded-xl m-1 font-semibold transition-colors">
+        <i data-lucide="bar-chart-3" class="w-5 h-5"></i>
+        <span class="text-[11px]">Reports</span>
+      </button>
+      <button data-action="open-settings" class="flex flex-col items-center justify-center gap-1 min-w-[74px] px-3 py-2.5 rounded-xl m-1 font-semibold text-gray-500 transition-colors">
+        <i data-lucide="settings" class="w-5 h-5"></i>
+        <span class="text-[11px]">Settings</span>
+      </button>
+    </div>
+  </nav>
+</div>
+
+<!-- ===================== MODAL ROOT ===================== -->
+<div id="modal-root"></div>
+
+<script>
+/* =========================================================================
+   BARBER SHOP MANAGEMENT SYSTEM
+   Vanilla JS + LocalStorage + Tailwind (CDN) + Lucide Icons
+   Single-file SPA. Organized into clear sections:
+     1. Storage / DB helpers
+     2. Seed data
+     3. Utility helpers
+     4. App state
+     5. Mutations (business logic)
+     6. View renderers
+     7. Modal renderers
+     8. Event delegation (click / input / change / submit)
+     9. Init
+   ========================================================================= */
+
+/* -------------------------------------------------------------------------
+   1. STORAGE / DB HELPERS
+   ------------------------------------------------------------------------- */
+const DB_KEYS = {
+  barbers: 'bs_barbers',
+  services: 'bs_services',
+  customers: 'bs_customers',
+  orders: 'bs_orders',
+  settings: 'bs_settings'
+};
+
+function loadDB(key) {
+  try {
+    const raw = localStorage.getItem(key);
+    return raw ? JSON.parse(raw) : null;
+  } catch (e) {
+    console.error('Failed to load', key, e);
+    return null;
+  }
+}
+function saveDB(key, data) {
+  try {
+    localStorage.setItem(key, JSON.stringify(data));
+    return true;
+  } catch (e) {
+    console.error('Failed to save', key, e);
+    return false;
+  }
+}
+
+// In-memory copies of every collection (kept in sync with localStorage)
+let barbers = [];
+let services = [];
+let customers = [];
+let orders = [];
+let settings = {};
+let storageWarningShown = false;
+
+function persistAll() {
+  const ok =
+    saveDB(DB_KEYS.barbers, barbers) &
+    saveDB(DB_KEYS.services, services) &
+    saveDB(DB_KEYS.customers, customers) &
+    saveDB(DB_KEYS.orders, orders) &
+    saveDB(DB_KEYS.settings, settings);
+  if (!ok) showStorageWarning();
+}
+
+function showStorageWarning() {
+  if (storageWarningShown) return;
+  storageWarningShown = true;
+  const banner = document.getElementById('storage-warning');
+  if (banner) banner.classList.remove('hidden');
+}
+
+/* -------------------------------------------------------------------------
+   2. SEED DATA (first launch only)
+   ------------------------------------------------------------------------- */
+function seedIfEmpty() {
+  const existing = loadDB(DB_KEYS.settings);
+  if (existing) {
+    barbers = loadDB(DB_KEYS.barbers) || [];
+    services = loadDB(DB_KEYS.services) || [];
+    customers = loadDB(DB_KEYS.customers) || [];
+    orders = loadDB(DB_KEYS.orders) || [];
+    settings = existing;
+    return;
+  }
+  seedFreshData();
+}
+
+function forceReseed() {
+  seedFreshData();
+  renderView();
+}
+
+function seedFreshData() {
+  settings = { shopName: 'Sharp & Fade Barber Shop', currencySymbol: '$' };
+
+  barbers = [
+    { id: uid('brb'), name: 'James Carter', phone: '555-0101', active: true },
+    { id: uid('brb'), name: 'Mike Rodriguez', phone: '555-0102', active: true },
+    { id: uid('brb'), name: 'Tom Baker', phone: '555-0103', active: true },
+    { id: uid('brb'), name: 'Alex Kim', phone: '555-0104', active: false }
+  ];
+
+  services = [
+    { id: uid('svc'), name: 'Classic Haircut', price: 25, duration: 30 },
+    { id: uid('svc'), name: 'Beard Trim', price: 15, duration: 15 },
+    { id: uid('svc'), name: 'Haircut + Beard', price: 35, duration: 45 },
+    { id: uid('svc'), name: 'Hot Towel Shave', price: 30, duration: 30 },
+    { id: uid('svc'), name: 'Kids Haircut', price: 18, duration: 20 },
+    { id: uid('svc'), name: 'Hair Coloring', price: 45, duration: 60 }
+  ];
+
+  customers = [
+    { id: uid('cus'), name: 'John Smith', phone: '555-1111', visits: 0, totalSpent: 0, lastVisit: null },
+    { id: uid('cus'), name: 'Robert Johnson', phone: '555-1112', visits: 0, totalSpent: 0, lastVisit: null },
+    { id: uid('cus'), name: 'David Lee', phone: '555-1113', visits: 0, totalSpent: 0, lastVisit: null },
+    { id: uid('cus'), name: 'Michael Brown', phone: '555-1114', visits: 0, totalSpent: 0, lastVisit: null },
+    { id: uid('cus'), name: 'Chris Evans', phone: '555-1115', visits: 0, totalSpent: 0, lastVisit: null }
+  ];
+
+  orders = [];
+  const activeBarbers = barbers.filter(b => b.active);
+  const paymentMethods = ['cash', 'card', 'bank', 'wallet'];
+
+  // Generate ~45 randomized historical orders across the past 60 days
+  for (let i = 0; i < 45; i++) {
+    const barber = activeBarbers[Math.floor(Math.random() * activeBarbers.length)];
+    const numServices = Math.random() < 0.6 ? 1 : 2;
+    const shuffled = [...services].sort(() => 0.5 - Math.random());
+    const chosenServices = shuffled.slice(0, numServices);
+    const total = chosenServices.reduce((sum, s) => sum + s.price, 0);
+    const payment = paymentMethods[Math.floor(Math.random() * paymentMethods.length)];
+    const date = randomPastISODate(60);
+
+    const useExisting = Math.random() < 0.7;
+    let customerId = null;
+    let customerName = 'Walk-in Customer';
+
+    if (useExisting) {
+      const cust = customers[Math.floor(Math.random() * customers.length)];
+      customerId = cust.id;
+      customerName = cust.name;
+      cust.visits += 1;
+      cust.totalSpent += total;
+      if (!cust.lastVisit || date > cust.lastVisit) cust.lastVisit = date;
+    }
+
+    orders.push({
+      id: uid('ord'),
+      date,
+      barberId: barber.id,
+      serviceIds: chosenServices.map(s => s.id),
+      customerId,
+      customerName,
+      total,
+      paymentMethod: payment
+    });
+  }
+
+  orders.sort((a, b) => new Date(b.date) - new Date(a.date));
+  persistAll();
+}
+
+/* -------------------------------------------------------------------------
+   3. UTILITY HELPERS
+   ------------------------------------------------------------------------- */
+function uid(prefix) {
+  return prefix + '_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+}
+function money(n) {
+  return (settings.currencySymbol || '$') + (Number(n) || 0).toFixed(2);
+}
+function todayISO() {
+  return new Date().toISOString();
+}
+function dayKey(iso) { return iso ? iso.slice(0, 10) : ''; }
+function monthKey(iso) { return iso ? iso.slice(0, 7) : ''; }
+function yearKey(iso) { return iso ? iso.slice(0, 4) : ''; }
+function currentMonthStr() { return new Date().toISOString().slice(0, 7); }
+function currentYearStr() { return new Date().getFullYear().toString(); }
+function currentDayStr() { return new Date().toISOString().slice(0, 10); }
+
+function randomPastISODate(daysBack) {
+  const d = new Date();
+  d.setDate(d.getDate() - Math.floor(Math.random() * daysBack));
+  d.setHours(9 + Math.floor(Math.random() * 9), Math.floor(Math.random() * 60), 0, 0);
+  return d.toISOString();
+}
+function formatDatePretty(iso) {
+  if (!iso) return '—';
+  const d = new Date(iso);
+  return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+}
+function formatDateTimePretty(iso) {
+  if (!iso) return '—';
+  const d = new Date(iso);
+  return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) +
+    ' · ' + d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
+}
+function initials(name) {
+  if (!name) return '?';
+  return name.trim().split(/\s+/).map(w => w[0]).slice(0, 2).join('').toUpperCase();
+}
+function esc(str) {
+  const div = document.createElement('div');
+  div.textContent = str == null ? '' : String(str);
+  return div.innerHTML;
+}
+function getBarber(id) { return barbers.find(b => b.id === id); }
+function getService(id) { return services.find(s => s.id === id); }
+function getCustomer(id) { return customers.find(c => c.id === id); }
+function barberName(id) { const b = getBarber(id); return b ? b.name : 'Unassigned'; }
+function serviceNames(ids) { return ids.map(id => { const s = getService(id); return s ? s.name : 'Removed service'; }).join(', '); }
+
+const PAYMENT_LABELS = { cash: 'Cash', card: 'Card', bank: 'Bank Transfer', wallet: 'Digital Wallet' };
+const PAYMENT_ICONS = { cash: 'banknote', card: 'credit-card', bank: 'landmark', wallet: 'wallet' };
+
+/* Preserve focus & cursor position across a full re-render (used for live search/filter inputs) */
+function preserveFocus(renderFn) {
+  const active = document.activeElement;
+  const id = active && active.id;
+  const selStart = active && typeof active.selectionStart === 'number' ? active.selectionStart : null;
+  const selEnd = active && typeof active.selectionEnd === 'number' ? active.selectionEnd : null;
+  renderFn();
+  if (id) {
+    const el = document.getElementById(id);
+    if (el) {
+      el.focus();
+      if (selStart !== null && el.setSelectionRange) {
+        try { el.setSelectionRange(selStart, selEnd); } catch (e) {}
+      }
+    }
+  }
+}
+
+/* -------------------------------------------------------------------------
+   4. APP STATE
+   ------------------------------------------------------------------------- */
+let currentView = 'dashboard';
+
+let wizard = {
+  step: 1,
+  barberId: null,
+  serviceIds: [],
+  customerMode: 'walkin', // 'existing' | 'new' | 'walkin'
+  customerId: null,
+  newCustomerName: '',
+  newCustomerPhone: '',
+  walkinName: '',
+  paymentMethod: null,
+  complete: false,
+  completedOrder: null
+};
+let wizardCustomerSearch = '';
+
+let historyFilters = { search: '', barberId: '', dateFrom: '', dateTo: '' };
+let customerSearch = '';
+let reportsState = { tab: 'daily', date: currentDayStr(), month: currentMonthStr(), year: currentYearStr() };
+
+function resetWizard() {
+  wizard = {
+    step: 1, barberId: null, serviceIds: [], customerMode: 'walkin', customerId: null,
+    newCustomerName: '', newCustomerPhone: '', walkinName: '', paymentMethod: null,
+    complete: false, completedOrder: null
+  };
+  wizardCustomerSearch = '';
+}
+
+/* -------------------------------------------------------------------------
+   5. MUTATIONS (business logic)
+   ------------------------------------------------------------------------- */
+function addBarber(data) {
+  barbers.push({ id: uid('brb'), name: data.name, phone: data.phone, active: !!data.active });
+  persistAll();
+}
+function updateBarber(id, data) {
+  const b = getBarber(id);
+  if (!b) return;
+  b.name = data.name; b.phone = data.phone; b.active = !!data.active;
+  persistAll();
+}
+function deleteBarber(id) {
+  barbers = barbers.filter(b => b.id !== id);
+  persistAll();
+}
+
+function addService(data) {
+  services.push({ id: uid('svc'), name: data.name, price: Number(data.price), duration: Number(data.duration) });
+  persistAll();
+}
+function updateService(id, data) {
+  const s = getService(id);
+  if (!s) return;
+  s.name = data.name; s.price = Number(data.price); s.duration = Number(data.duration);
+  persistAll();
+}
+function deleteService(id) {
+  services = services.filter(s => s.id !== id);
+  persistAll();
+}
+
+function addCustomer(data) {
+  const c = { id: uid('cus'), name: data.name, phone: data.phone, visits: 0, totalSpent: 0, lastVisit: null };
+  customers.push(c);
+  persistAll();
+  return c;
+}
+function updateCustomer(id, data) {
+  const c = getCustomer(id);
+  if (!c) return;
+  c.name = data.name; c.phone = data.phone;
+  persistAll();
+}
+function deleteCustomer(id) {
+  customers = customers.filter(c => c.id !== id);
+  persistAll();
+}
+
+function completeOrder() {
+  const chosenServices = wizard.serviceIds.map(getService).filter(Boolean);
+  const total = chosenServices.reduce((sum, s) => sum + s.price, 0);
+  const date = todayISO();
+  let customerId = null;
+  let customerName = 'Walk-in Customer';
+
+  if (wizard.customerMode === 'existing' && wizard.customerId) {
+    const c = getCustomer(wizard.customerId);
+    if (c) {
+      customerId = c.id;
+      customerName = c.name;
+      c.visits += 1;
+      c.totalSpent += total;
+      c.lastVisit = date;
+    }
+  } else if (wizard.customerMode === 'new' && wizard.newCustomerName.trim()) {
+    const c = addCustomer({ name: wizard.newCustomerName.trim(), phone: wizard.newCustomerPhone.trim() });
+    c.visits = 1;
+    c.totalSpent = total;
+    c.lastVisit = date;
+    customerId = c.id;
+    customerName = c.name;
+  } else {
+    customerName = wizard.walkinName.trim() || 'Walk-in Customer';
+  }
+
+  const order = {
+    id: uid('ord'),
+    date,
+    barberId: wizard.barberId,
+    serviceIds: [...wizard.serviceIds],
+    customerId,
+    customerName,
+    total,
+    paymentMethod: wizard.paymentMethod
+  };
+  orders.unshift(order);
+  persistAll();
+
+  wizard.complete = true;
+  wizard.completedOrder = order;
+  renderView();
+}
+
+function deleteOrder(id) {
+  const order = orders.find(o => o.id === id);
+  if (!order) return;
+  if (order.customerId) {
+    const c = getCustomer(order.customerId);
+    if (c) {
+      c.visits = Math.max(0, c.visits - 1);
+      c.totalSpent = Math.max(0, c.totalSpent - order.total);
+    }
+  }
+  orders = orders.filter(o => o.id !== id);
+  persistAll();
+}
+
+function updateOrder(id, data) {
+  const order = orders.find(o => o.id === id);
+  if (!order) return;
+  const oldTotal = order.total;
+  const newServices = data.serviceIds.map(getService).filter(Boolean);
+  const newTotal = newServices.reduce((sum, s) => sum + s.price, 0);
+
+  order.barberId = data.barberId;
+  order.serviceIds = data.serviceIds;
+  order.paymentMethod = data.paymentMethod;
+  order.total = newTotal;
+  if (!order.customerId && data.customerName) {
+    order.customerName = data.customerName;
+  }
+
+  if (order.customerId) {
+    const c = getCustomer(order.customerId);
+    if (c) c.totalSpent = Math.max(0, c.totalSpent - oldTotal + newTotal);
+  }
+  persistAll();
+}
+
+/* -------------------------------------------------------------------------
+   6. VIEW RENDERERS
+   ------------------------------------------------------------------------- */
+const PAGE_TITLES = {
+  dashboard: 'Dashboard', neworder: 'New Order', history: 'Order History',
+  customers: 'Customers', barbers: 'Barbers', services: 'Services', reports: 'Reports'
+};
+
+function renderView() {
+  document.getElementById('main-content').innerHTML = viewRenderers[currentView]();
+  document.getElementById('page-title').textContent = PAGE_TITLES[currentView] || '';
+  document.querySelectorAll('[data-view-btn]').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.view === currentView);
+  });
+  if (window.lucide) lucide.createIcons();
+}
+
+function navigate(view) {
+  currentView = view;
+  if (view === 'neworder' && wizard.complete) resetWizard();
+  renderView();
+  document.getElementById('main-content').scrollTop = 0;
+}
+
+function startNewOrder() {
+  resetWizard();
+  currentView = 'neworder';
+  renderView();
+}
+
+/* ---------- 6.1 Dashboard ---------- */
+function renderDashboard() {
+  const today = currentDayStr();
+  const month = currentMonthStr();
+  const year = currentYearStr();
+
+  const todayOrders = orders.filter(o => dayKey(o.date) === today);
+  const monthOrders = orders.filter(o => monthKey(o.date) === month);
+  const yearOrders = orders.filter(o => yearKey(o.date) === year);
+
+  const todayRevenue = todayOrders.reduce((s, o) => s + o.total, 0);
+  const monthRevenue = monthOrders.reduce((s, o) => s + o.total, 0);
+  const yearRevenue = yearOrders.reduce((s, o) => s + o.total, 0);
+
+  // Top barber (all-time revenue)
+  const revenueByBarberAllTime = {};
+  orders.forEach(o => { revenueByBarberAllTime[o.barberId] = (revenueByBarberAllTime[o.barberId] || 0) + o.total; });
+  let topBarberId = null, topBarberRevenue = 0;
+  Object.entries(revenueByBarberAllTime).forEach(([id, rev]) => {
+    if (rev > topBarberRevenue) { topBarberRevenue = rev; topBarberId = id; }
+  });
+
+  // Most popular service (all-time count)
+  const serviceCounts = {};
+  orders.forEach(o => o.serviceIds.forEach(sid => { serviceCounts[sid] = (serviceCounts[sid] || 0) + 1; }));
+  let topServiceId = null, topServiceCount = 0;
+  Object.entries(serviceCounts).forEach(([id, count]) => {
+    if (count > topServiceCount) { topServiceCount = count; topServiceId = id; }
+  });
+
+  const statCards = [
+    { label: "Today's Revenue", value: money(todayRevenue), icon: 'sun' },
+    { label: 'Monthly Revenue', value: money(monthRevenue), icon: 'calendar-days' },
+    { label: 'Yearly Revenue', value: money(yearRevenue), icon: 'trending-up' },
+    { label: "Today's Orders", value: todayOrders.length, icon: 'receipt' },
+    { label: 'Total Customers', value: customers.length, icon: 'users' },
+    { label: 'Top Barber', value: topBarberId ? barberName(topBarberId) : '—', icon: 'award' },
+    { label: 'Most Popular Service', value: topServiceId ? getService(topServiceId).name : '—', icon: 'star' }
+  ];
+
+  const barberRows = barbers.map(b => {
+    const bToday = todayOrders.filter(o => o.barberId === b.id);
+    const bMonth = monthOrders.filter(o => o.barberId === b.id);
+    const bYear = yearOrders.filter(o => o.barberId === b.id);
+    return { barber: b,
+      revToday: bToday.reduce((s, o) => s + o.total, 0),
+      revMonth: bMonth.reduce((s, o) => s + o.total, 0),
+      revYear: bYear.reduce((s, o) => s + o.total, 0),
+      custToday: bToday.length
+    };
+  }).sort((a, b) => b.revMonth - a.revMonth);
+
+  const recentOrders = orders.slice(0, 5);
+
+  return `
+    <div class="fade-in space-y-6 max-w-6xl mx-auto">
+      <div class="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4">
+        ${statCards.map(c => `
+          <div class="bg-white rounded-2xl border border-gray-200 p-5">
+            <div class="flex items-center justify-between mb-3">
+              <div class="w-10 h-10 rounded-xl bg-rose-50 flex items-center justify-center">
+                <i data-lucide="${c.icon}" class="w-5 h-5 text-rose-700"></i>
+              </div>
+            </div>
+            <div class="text-2xl font-bold text-gray-900 truncate" title="${esc(c.value)}">${esc(c.value)}</div>
+            <div class="text-sm text-gray-500 mt-1">${esc(c.label)}</div>
+          </div>
+        `).join('')}
+      </div>
+
+      <div class="bg-white rounded-2xl border border-gray-200 overflow-hidden">
+        <div class="p-5 border-b border-gray-200">
+          <h2 class="font-bold text-lg">Performance by Barber</h2>
+          <p class="text-sm text-gray-500">Revenue and customers served, by period</p>
+        </div>
+        <div class="overflow-x-auto">
+          <table class="w-full text-left">
+            <thead>
+              <tr class="text-xs uppercase text-gray-400 border-b border-gray-100">
+                <th class="px-5 py-3 font-semibold">Barber</th>
+                <th class="px-5 py-3 font-semibold">Today</th>
+                <th class="px-5 py-3 font-semibold">This Month</th>
+                <th class="px-5 py-3 font-semibold">This Year</th>
+                <th class="px-5 py-3 font-semibold">Customers Today</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${barberRows.length ? barberRows.map(r => `
+                <tr class="border-b border-gray-50 last:border-0">
+                  <td class="px-5 py-3.5">
+                    <div class="flex items-center gap-3">
+                      <div class="w-9 h-9 rounded-full bg-gray-100 flex items-center justify-center text-xs font-bold text-gray-600">${esc(initials(r.barber.name))}</div>
+                      <span class="font-semibold">${esc(r.barber.name)}</span>
+                      ${!r.barber.active ? '<span class="text-xs bg-gray-100 text-gray-500 px-2 py-0.5 rounded-full">Inactive</span>' : ''}
+                    </div>
+                  </td>
+                  <td class="px-5 py-3.5 font-medium">${money(r.revToday)}</td>
+                  <td class="px-5 py-3.5 font-medium">${money(r.revMonth)}</td>
+                  <td class="px-5 py-3.5 font-medium">${money(r.revYear)}</td>
+                  <td class="px-5 py-3.5">${r.custToday}</td>
+                </tr>
+              `).join('') : `<tr><td colspan="5" class="px-5 py-8 text-center text-gray-400">No barbers yet.</td></tr>`}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="bg-white rounded-2xl border border-gray-200 overflow-hidden">
+        <div class="p-5 border-b border-gray-200 flex items-center justify-between">
+          <div>
+            <h2 class="font-bold text-lg">Recent Orders</h2>
+            <p class="text-sm text-gray-500">Last 5 completed orders</p>
+          </div>
+          <button data-action="nav" data-view="history" class="text-rose-700 font-semibold text-sm hover:underline">View all</button>
+        </div>
+        <div class="divide-y divide-gray-50">
+          ${recentOrders.length ? recentOrders.map(o => `
+            <div class="px-5 py-4 flex items-center justify-between gap-3">
+              <div class="min-w-0">
+                <div class="font-semibold truncate">${esc(o.customerName)}</div>
+                <div class="text-sm text-gray-500 truncate">${esc(barberName(o.barberId))} · ${esc(serviceNames(o.serviceIds))}</div>
+              </div>
+              <div class="text-right shrink-0">
+                <div class="font-bold">${money(o.total)}</div>
+                <div class="text-xs text-gray-400">${formatDatePretty(o.date)}</div>
+              </div>
+            </div>
+          `).join('') : `<div class="px-5 py-10 text-center text-gray-400">No orders yet. Start with New Order.</div>`}
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+/* ---------- 6.2 New Order Wizard ---------- */
+function renderNewOrder() {
+  if (wizard.complete) return renderWizardSuccess();
+
+  const steps = [
+    { n: 1, label: 'Barber' },
+    { n: 2, label: 'Services' },
+    { n: 3, label: 'Customer' },
+    { n: 4, label: 'Payment' }
+  ];
+
+  return `
+    <div class="fade-in max-w-4xl mx-auto pb-6">
+      <div class="flex items-center justify-between mb-6 sm:mb-8">
+        ${steps.map((s, i) => `
+          <div class="flex items-center ${i < steps.length - 1 ? 'flex-1' : ''}">
+            <div class="flex flex-col items-center gap-1 sm:gap-1.5 shrink-0">
+              <div class="w-8 h-8 sm:w-10 sm:h-10 rounded-full flex items-center justify-center font-bold text-xs sm:text-sm
+                ${wizard.step === s.n ? 'bg-rose-700 text-white' : wizard.step > s.n ? 'bg-rose-100 text-rose-700' : 'bg-gray-100 text-gray-400'}">
+                ${wizard.step > s.n ? '<i data-lucide="check" class="w-4 h-4 sm:w-5 sm:h-5"></i>' : s.n}
+              </div>
+              <span class="text-[10px] sm:text-xs font-semibold ${wizard.step === s.n ? 'text-rose-700' : 'text-gray-400'}">${s.label}</span>
+            </div>
+            ${i < steps.length - 1 ? `<div class="flex-1 h-0.5 mx-1 sm:mx-2 ${wizard.step > s.n ? 'bg-rose-300' : 'bg-gray-100'}"></div>` : ''}
+          </div>
+        `).join('')}
+        <button data-action="wizard-cancel" class="ml-2 sm:ml-4 w-9 h-9 sm:w-10 sm:h-10 rounded-full hover:bg-gray-100 flex items-center justify-center text-gray-400 shrink-0" aria-label="Cancel order">
+          <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
+      </div>
+
+      ${wizard.step === 1 ? renderWizardStepBarber() : ''}
+      ${wizard.step === 2 ? renderWizardStepServices() : ''}
+      ${wizard.step === 3 ? renderWizardStepCustomer() : ''}
+      ${wizard.step === 4 ? renderWizardStepPayment() : ''}
+    </div>
+  `;
+}
+
+function renderWizardStepBarber() {
+  const activeBarbers = barbers.filter(b => b.active);
+  return `
+    <div>
+      <h2 class="text-xl font-bold mb-1">Who's cutting today?</h2>
+      <p class="text-gray-500 mb-5">Select a barber to begin the order.</p>
+      <div class="grid grid-cols-2 sm:grid-cols-3 gap-4">
+        ${activeBarbers.length ? activeBarbers.map(b => `
+          <button data-action="wizard-select-barber" data-id="${b.id}"
+            class="flex flex-col items-center gap-3 p-6 rounded-2xl border-2 transition-colors
+            ${wizard.barberId === b.id ? 'border-rose-700 bg-rose-50' : 'border-gray-200 bg-white hover:border-gray-300'}">
+            <div class="w-16 h-16 rounded-full bg-gray-100 flex items-center justify-center text-xl font-bold text-gray-600">${esc(initials(b.name))}</div>
+            <span class="font-bold text-center">${esc(b.name)}</span>
+          </button>
+        `).join('') : `<div class="col-span-full text-center text-gray-400 py-10">No active barbers. Add one in Barbers.</div>`}
+      </div>
+    </div>
+  `;
+}
+
+function renderWizardStepServices() {
+  const total = wizard.serviceIds.reduce((sum, id) => { const s = getService(id); return sum + (s ? s.price : 0); }, 0);
+  return `
+    <div>
+      <h2 class="text-xl font-bold mb-1">Select services</h2>
+      <p class="text-gray-500 mb-5">Tap to add one or more services.</p>
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        ${services.length ? services.map(s => {
+          const selected = wizard.serviceIds.includes(s.id);
+          return `
+          <button data-action="wizard-toggle-service" data-id="${s.id}"
+            class="flex items-center justify-between gap-3 p-5 rounded-2xl border-2 text-left transition-colors
+            ${selected ? 'border-rose-700 bg-rose-50' : 'border-gray-200 bg-white hover:border-gray-300'}">
+            <div class="min-w-0">
+              <div class="font-bold truncate">${esc(s.name)}</div>
+              <div class="text-sm text-gray-500">${s.duration} min</div>
+            </div>
+            <div class="flex items-center gap-3 shrink-0">
+              <span class="font-bold text-lg">${money(s.price)}</span>
+              <div class="w-6 h-6 rounded-full border-2 flex items-center justify-center ${selected ? 'bg-rose-700 border-rose-700' : 'border-gray-300'}">
+                ${selected ? '<i data-lucide="check" class="w-4 h-4 text-white"></i>' : ''}
+              </div>
+            </div>
+          </button>
+        `; }).join('') : `
+          <div class="col-span-full text-center text-gray-400 py-10 bg-white rounded-2xl border border-gray-200">
+            No services yet.<br>
+            <button data-action="nav" data-view="services" class="text-rose-700 font-semibold hover:underline mt-1 inline-block">Add a service to get started</button>
+          </div>
+        `}
+      </div>
+      ${renderWizardFooter(`
+        <div class="flex items-center gap-2">
+          <span class="text-sm text-gray-500">Total</span>
+          <span class="text-2xl font-bold">${money(total)}</span>
+        </div>
+        <div class="flex items-center gap-3 w-full sm:w-auto">
+          <button data-action="wizard-back" class="flex-1 sm:flex-none px-5 py-3.5 rounded-xl font-semibold text-gray-600 hover:bg-gray-100">Back</button>
+          <button data-action="wizard-next" ${wizard.serviceIds.length === 0 ? 'disabled' : ''}
+            class="flex-1 sm:flex-none px-8 py-3.5 rounded-xl font-bold text-white bg-rose-700 hover:bg-rose-800 disabled:opacity-40 disabled:cursor-not-allowed">Next</button>
+        </div>
+      `)}
+    </div>
+  `;
+}
+
+function renderWizardStepCustomer() {
+  const modes = [
+    { id: 'walkin', label: 'Walk-in', icon: 'footprints' },
+    { id: 'existing', label: 'Existing Customer', icon: 'user-check' },
+    { id: 'new', label: 'New Customer', icon: 'user-plus' }
+  ];
+  const q = wizardCustomerSearch.trim().toLowerCase();
+  const filtered = q ? customers.filter(c => c.name.toLowerCase().includes(q) || c.phone.includes(q)) : customers;
+
+  let body = '';
+  if (wizard.customerMode === 'walkin') {
+    body = `
+      <div class="bg-white rounded-2xl border border-gray-200 p-6">
+        <label class="block text-sm font-semibold text-gray-600 mb-2">Walk-in name <span class="text-gray-400 font-normal">(optional)</span></label>
+        <input type="text" id="wizard-walkin-name" data-action="wizard-set-walkin-name" value="${esc(wizard.walkinName)}"
+          placeholder="e.g. Walk-in Customer"
+          class="w-full px-4 py-3.5 rounded-xl border border-gray-300 text-lg focus:border-rose-700">
+      </div>`;
+  } else if (wizard.customerMode === 'new') {
+    body = `
+      <div class="bg-white rounded-2xl border border-gray-200 p-6 space-y-4">
+        <div>
+          <label class="block text-sm font-semibold text-gray-600 mb-2">Full name</label>
+          <input type="text" id="wizard-new-name" data-action="wizard-set-new-name" value="${esc(wizard.newCustomerName)}"
+            placeholder="Customer name"
+            class="w-full px-4 py-3.5 rounded-xl border border-gray-300 text-lg focus:border-rose-700">
+        </div>
+        <div>
+          <label class="block text-sm font-semibold text-gray-600 mb-2">Phone <span class="text-gray-400 font-normal">(optional)</span></label>
+          <input type="tel" id="wizard-new-phone" data-action="wizard-set-new-phone" value="${esc(wizard.newCustomerPhone)}"
+            placeholder="Phone number"
+            class="w-full px-4 py-3.5 rounded-xl border border-gray-300 text-lg focus:border-rose-700">
+        </div>
+      </div>`;
+  } else {
+    body = `
+      <div class="bg-white rounded-2xl border border-gray-200 p-4">
+        <div class="relative mb-3">
+          <i data-lucide="search" class="w-5 h-5 text-gray-400 absolute left-4 top-1/2 -translate-y-1/2"></i>
+          <input type="text" id="wizard-customer-search" data-action="wizard-search-customer" value="${esc(wizardCustomerSearch)}"
+            placeholder="Search by name or phone"
+            class="w-full pl-11 pr-4 py-3.5 rounded-xl border border-gray-300 text-lg focus:border-rose-700">
+        </div>
+        <div class="max-h-72 overflow-y-auto space-y-2">
+          ${filtered.length ? filtered.map(c => `
+            <button data-action="wizard-select-customer" data-id="${c.id}"
+              class="w-full flex items-center justify-between gap-3 p-4 rounded-xl border-2 text-left transition-colors
+              ${wizard.customerId === c.id ? 'border-rose-700 bg-rose-50' : 'border-gray-100 hover:border-gray-300'}">
+              <div class="flex items-center gap-3 min-w-0">
+                <div class="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center text-xs font-bold text-gray-600 shrink-0">${esc(initials(c.name))}</div>
+                <div class="min-w-0">
+                  <div class="font-semibold truncate">${esc(c.name)}</div>
+                  <div class="text-sm text-gray-500 truncate">${esc(c.phone || 'No phone')}</div>
+                </div>
+              </div>
+              ${wizard.customerId === c.id ? '<i data-lucide="check-circle-2" class="w-5 h-5 text-rose-700 shrink-0"></i>' : ''}
+            </button>
+          `).join('') : `<div class="text-center text-gray-400 py-8">No customers found.</div>`}
+        </div>
+      </div>`;
+  }
+
+  const canProceed = wizard.customerMode === 'walkin' ||
+    (wizard.customerMode === 'existing' && wizard.customerId) ||
+    (wizard.customerMode === 'new' && wizard.newCustomerName.trim());
+
+  return `
+    <div>
+      <h2 class="text-xl font-bold mb-1">Who's this order for?</h2>
+      <p class="text-gray-500 mb-5">Choose how to identify the customer.</p>
+      <div class="grid grid-cols-3 gap-3 mb-5">
+        ${modes.map(m => `
+          <button data-action="wizard-set-customer-mode" data-mode="${m.id}"
+            class="flex flex-col items-center gap-2 p-4 rounded-2xl border-2 transition-colors
+            ${wizard.customerMode === m.id ? 'border-rose-700 bg-rose-50' : 'border-gray-200 bg-white hover:border-gray-300'}">
+            <i data-lucide="${m.icon}" class="w-6 h-6 ${wizard.customerMode === m.id ? 'text-rose-700' : 'text-gray-500'}"></i>
+            <span class="text-sm font-bold text-center">${m.label}</span>
+          </button>
+        `).join('')}
+      </div>
+      ${body}
+      ${renderWizardFooter(`
+        <div></div>
+        <div class="flex items-center gap-3 w-full sm:w-auto">
+          <button data-action="wizard-back" class="flex-1 sm:flex-none px-5 py-3.5 rounded-xl font-semibold text-gray-600 hover:bg-gray-100">Back</button>
+          <button data-action="wizard-next" ${canProceed ? '' : 'disabled'}
+            class="flex-1 sm:flex-none px-8 py-3.5 rounded-xl font-bold text-white bg-rose-700 hover:bg-rose-800 disabled:opacity-40 disabled:cursor-not-allowed">Next</button>
+        </div>
+      `)}
+    </div>
+  `;
+}
+
+function renderWizardStepPayment() {
+  const methods = [
+    { id: 'cash', label: 'Cash', icon: 'banknote' },
+    { id: 'card', label: 'Card', icon: 'credit-card' },
+    { id: 'bank', label: 'Bank Transfer', icon: 'landmark' },
+    { id: 'wallet', label: 'Digital Wallet', icon: 'wallet' }
+  ];
+  const total = wizard.serviceIds.reduce((sum, id) => { const s = getService(id); return sum + (s ? s.price : 0); }, 0);
+  const barber = getBarber(wizard.barberId);
+  let customerLabel = wizard.walkinName.trim() || 'Walk-in Customer';
+  if (wizard.customerMode === 'existing') customerLabel = getCustomer(wizard.customerId)?.name || '—';
+  if (wizard.customerMode === 'new') customerLabel = wizard.newCustomerName.trim();
+
+  return `
+    <div>
+      <h2 class="text-xl font-bold mb-1">How are they paying?</h2>
+      <p class="text-gray-500 mb-5">Select a payment method to finish.</p>
+      <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
+        ${methods.map(m => `
+          <button data-action="wizard-select-payment" data-payment="${m.id}"
+            class="flex flex-col items-center gap-2 p-5 rounded-2xl border-2 transition-colors
+            ${wizard.paymentMethod === m.id ? 'border-rose-700 bg-rose-50' : 'border-gray-200 bg-white hover:border-gray-300'}">
+            <i data-lucide="${m.icon}" class="w-7 h-7 ${wizard.paymentMethod === m.id ? 'text-rose-700' : 'text-gray-500'}"></i>
+            <span class="text-sm font-bold text-center">${m.label}</span>
+          </button>
+        `).join('')}
+      </div>
+
+      <div class="bg-white rounded-2xl border border-gray-200 p-6 space-y-3">
+        <h3 class="font-bold text-gray-900 mb-1">Order Summary</h3>
+        <div class="flex justify-between text-sm"><span class="text-gray-500">Barber</span><span class="font-semibold">${esc(barber ? barber.name : '—')}</span></div>
+        <div class="flex justify-between text-sm"><span class="text-gray-500">Customer</span><span class="font-semibold">${esc(customerLabel || 'Walk-in Customer')}</span></div>
+        <div class="flex justify-between text-sm"><span class="text-gray-500">Services</span><span class="font-semibold text-right">${esc(serviceNames(wizard.serviceIds))}</span></div>
+        <div class="border-t border-gray-100 pt-3 flex justify-between items-center">
+          <span class="text-gray-500">Total</span><span class="text-2xl font-bold">${money(total)}</span>
+        </div>
+      </div>
+
+      ${renderWizardFooter(`
+        <div></div>
+        <div class="flex items-center gap-3 w-full sm:w-auto">
+          <button data-action="wizard-back" class="flex-1 sm:flex-none px-5 py-3.5 rounded-xl font-semibold text-gray-600 hover:bg-gray-100">Back</button>
+          <button data-action="wizard-complete" ${wizard.paymentMethod ? '' : 'disabled'}
+            class="flex-1 sm:flex-none flex items-center justify-center gap-2 px-8 py-3.5 rounded-xl font-bold text-white bg-rose-700 hover:bg-rose-800 disabled:opacity-40 disabled:cursor-not-allowed">
+            <i data-lucide="check" class="w-5 h-5"></i> Complete Order
+          </button>
+        </div>
+      `)}
+    </div>
+  `;
+}
+
+function renderWizardFooter(innerHTML) {
+  return `<div class="sticky bottom-20 sm:bottom-0 mt-6 bg-white/95 backdrop-blur border border-gray-200 rounded-2xl p-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">${innerHTML}</div>`;
+}
+
+function renderWizardSuccess() {
+  const o = wizard.completedOrder;
+  if (!o) return '';
+  return `
+    <div class="fade-in max-w-md mx-auto text-center py-12">
+      <div class="w-20 h-20 rounded-full bg-rose-50 flex items-center justify-center mx-auto mb-5">
+        <i data-lucide="check" class="w-10 h-10 text-rose-700"></i>
+      </div>
+      <h2 class="text-2xl font-bold mb-1">Order Complete</h2>
+      <p class="text-gray-500 mb-6">${esc(o.customerName)} · ${esc(barberName(o.barberId))}</p>
+      <div class="bg-white rounded-2xl border border-gray-200 p-6 text-left mb-6">
+        <div class="flex justify-between text-sm mb-2"><span class="text-gray-500">Services</span><span class="font-semibold text-right">${esc(serviceNames(o.serviceIds))}</span></div>
+        <div class="flex justify-between text-sm mb-2"><span class="text-gray-500">Payment</span><span class="font-semibold">${PAYMENT_LABELS[o.paymentMethod] || '—'}</span></div>
+        <div class="border-t border-gray-100 pt-3 flex justify-between items-center">
+          <span class="text-gray-500">Total Paid</span><span class="text-2xl font-bold">${money(o.total)}</span>
+        </div>
+      </div>
+      <div class="flex flex-col sm:flex-row gap-3 justify-center">
+        <button data-action="wizard-restart" class="px-6 py-3.5 rounded-xl font-bold text-white bg-rose-700 hover:bg-rose-800">Start New Order</button>
+        <button data-action="nav" data-view="dashboard" class="px-6 py-3.5 rounded-xl font-semibold text-gray-600 hover:bg-gray-100 border border-gray-200">Go to Dashboard</button>
+      </div>
+    </div>
+  `;
+}
+
+/* ---------- 6.3 Order History ---------- */
+function renderOrderHistory() {
+  let list = [...orders];
+  const q = historyFilters.search.trim().toLowerCase();
+  if (q) {
+    list = list.filter(o =>
+      o.customerName.toLowerCase().includes(q) ||
+      barberName(o.barberId).toLowerCase().includes(q) ||
+      serviceNames(o.serviceIds).toLowerCase().includes(q)
+    );
+  }
+  if (historyFilters.barberId) list = list.filter(o => o.barberId === historyFilters.barberId);
+  if (historyFilters.dateFrom) list = list.filter(o => dayKey(o.date) >= historyFilters.dateFrom);
+  if (historyFilters.dateTo) list = list.filter(o => dayKey(o.date) <= historyFilters.dateTo);
+
+  return `
+    <div class="fade-in max-w-6xl mx-auto space-y-5">
+      <div class="bg-white rounded-2xl border border-gray-200 p-4 flex flex-wrap gap-3 items-end no-print">
+        <div class="flex-1 min-w-[200px]">
+          <label class="block text-xs font-semibold text-gray-500 mb-1.5">Search</label>
+          <div class="relative">
+            <i data-lucide="search" class="w-4 h-4 text-gray-400 absolute left-3.5 top-1/2 -translate-y-1/2"></i>
+            <input type="text" id="history-search" data-action="filter-history-search" value="${esc(historyFilters.search)}"
+              placeholder="Customer, barber, or service"
+              class="w-full pl-10 pr-3 py-3 rounded-xl border border-gray-300 focus:border-rose-700">
+          </div>
+        </div>
+        <div>
+          <label class="block text-xs font-semibold text-gray-500 mb-1.5">Barber</label>
+          <select id="history-barber" data-action="filter-history-barber" class="px-3 py-3 rounded-xl border border-gray-300 focus:border-rose-700">
+            <option value="">All Barbers</option>
+            ${barbers.map(b => `<option value="${b.id}" ${historyFilters.barberId === b.id ? 'selected' : ''}>${esc(b.name)}</option>`).join('')}
+          </select>
+        </div>
+        <div>
+          <label class="block text-xs font-semibold text-gray-500 mb-1.5">From</label>
+          <input type="date" id="history-from" data-action="filter-history-from" value="${historyFilters.dateFrom}" class="px-3 py-3 rounded-xl border border-gray-300 focus:border-rose-700">
+        </div>
+        <div>
+          <label class="block text-xs font-semibold text-gray-500 mb-1.5">To</label>
+          <input type="date" id="history-to" data-action="filter-history-to" value="${historyFilters.dateTo}" class="px-3 py-3 rounded-xl border border-gray-300 focus:border-rose-700">
+        </div>
+        <button data-action="clear-history-filters" class="px-4 py-3 rounded-xl font-semibold text-gray-500 hover:bg-gray-100 border border-gray-200">Clear</button>
+        <button data-action="print-page" class="ml-auto px-4 py-3 rounded-xl font-semibold text-white bg-gray-900 hover:bg-black flex items-center gap-2">
+          <i data-lucide="printer" class="w-4 h-4"></i> Print
+        </button>
+      </div>
+
+      <div class="bg-white rounded-2xl border border-gray-200 overflow-hidden">
+        <div class="overflow-x-auto">
+          <table class="w-full text-left">
+            <thead>
+              <tr class="text-xs uppercase text-gray-400 border-b border-gray-100">
+                <th class="px-5 py-3 font-semibold">Date</th>
+                <th class="px-5 py-3 font-semibold">Customer</th>
+                <th class="px-5 py-3 font-semibold">Barber</th>
+                <th class="px-5 py-3 font-semibold">Services</th>
+                <th class="px-5 py-3 font-semibold">Payment</th>
+                <th class="px-5 py-3 font-semibold">Total</th>
+                <th class="px-5 py-3 font-semibold no-print">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${list.length ? list.map(o => `
+                <tr class="border-b border-gray-50 last:border-0">
+                  <td class="px-5 py-3.5 text-sm whitespace-nowrap">${formatDateTimePretty(o.date)}</td>
+                  <td class="px-5 py-3.5 font-semibold">${esc(o.customerName)}</td>
+                  <td class="px-5 py-3.5">${esc(barberName(o.barberId))}</td>
+                  <td class="px-5 py-3.5 text-sm text-gray-500 max-w-xs truncate">${esc(serviceNames(o.serviceIds))}</td>
+                  <td class="px-5 py-3.5 text-sm">${PAYMENT_LABELS[o.paymentMethod] || '—'}</td>
+                  <td class="px-5 py-3.5 font-bold">${money(o.total)}</td>
+                  <td class="px-5 py-3.5 no-print">
+                    <div class="flex items-center gap-1">
+                      <button data-action="open-edit-order" data-id="${o.id}" class="w-9 h-9 rounded-lg hover:bg-gray-100 flex items-center justify-center text-gray-500" aria-label="Edit order"><i data-lucide="pencil" class="w-4 h-4"></i></button>
+                      <button data-action="delete-order" data-id="${o.id}" class="w-9 h-9 rounded-lg hover:bg-red-50 flex items-center justify-center text-red-500" aria-label="Delete order"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
+                    </div>
+                  </td>
+                </tr>
+              `).join('') : `<tr><td colspan="7" class="px-5 py-12 text-center text-gray-400">No orders match these filters.</td></tr>`}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+/* ---------- 6.4 Customers ---------- */
+function renderCustomers() {
+  const q = customerSearch.trim().toLowerCase();
+  const list = q ? customers.filter(c => c.name.toLowerCase().includes(q) || c.phone.includes(q)) : customers;
+  const sorted = [...list].sort((a, b) => a.name.localeCompare(b.name));
+
+  return `
+    <div class="fade-in max-w-6xl mx-auto space-y-5">
+      <div class="flex flex-wrap gap-3 items-center">
+        <div class="relative flex-1 min-w-[220px]">
+          <i data-lucide="search" class="w-4 h-4 text-gray-400 absolute left-3.5 top-1/2 -translate-y-1/2"></i>
+          <input type="text" id="customer-search" data-action="filter-customer-search" value="${esc(customerSearch)}"
+            placeholder="Search by name or phone"
+            class="w-full pl-10 pr-3 py-3.5 rounded-xl border border-gray-300 focus:border-rose-700">
+        </div>
+        <button data-action="open-add-customer" class="flex items-center gap-2 px-5 py-3.5 rounded-xl font-bold text-white bg-rose-700 hover:bg-rose-800">
+          <i data-lucide="user-plus" class="w-5 h-5"></i> Add Customer
+        </button>
+      </div>
+
+      <div class="bg-white rounded-2xl border border-gray-200 overflow-hidden">
+        <div class="overflow-x-auto">
+          <table class="w-full text-left">
+            <thead>
+              <tr class="text-xs uppercase text-gray-400 border-b border-gray-100">
+                <th class="px-5 py-3 font-semibold">Name</th>
+                <th class="px-5 py-3 font-semibold">Phone</th>
+                <th class="px-5 py-3 font-semibold">Visits</th>
+                <th class="px-5 py-3 font-semibold">Total Spent</th>
+                <th class="px-5 py-3 font-semibold">Last Visit</th>
+                <th class="px-5 py-3 font-semibold">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${sorted.length ? sorted.map(c => `
+                <tr class="border-b border-gray-50 last:border-0">
+                  <td class="px-5 py-3.5">
+                    <div class="flex items-center gap-3">
+                      <div class="w-9 h-9 rounded-full bg-gray-100 flex items-center justify-center text-xs font-bold text-gray-600">${esc(initials(c.name))}</div>
+                      <span class="font-semibold">${esc(c.name)}</span>
+                    </div>
+                  </td>
+                  <td class="px-5 py-3.5 text-gray-500">${esc(c.phone || '—')}</td>
+                  <td class="px-5 py-3.5">${c.visits}</td>
+                  <td class="px-5 py-3.5 font-semibold">${money(c.totalSpent)}</td>
+                  <td class="px-5 py-3.5 text-gray-500">${c.lastVisit ? formatDatePretty(c.lastVisit) : 'Never'}</td>
+                  <td class="px-5 py-3.5">
+                    <div class="flex items-center gap-1">
+                      <button data-action="open-edit-customer" data-id="${c.id}" class="w-9 h-9 rounded-lg hover:bg-gray-100 flex items-center justify-center text-gray-500" aria-label="Edit customer"><i data-lucide="pencil" class="w-4 h-4"></i></button>
+                      <button data-action="delete-customer" data-id="${c.id}" class="w-9 h-9 rounded-lg hover:bg-red-50 flex items-center justify-center text-red-500" aria-label="Delete customer"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
+                    </div>
+                  </td>
+                </tr>
+              `).join('') : `<tr><td colspan="6" class="px-5 py-12 text-center text-gray-400">No customers found.</td></tr>`}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+/* ---------- 6.5 Barbers ---------- */
+function renderBarbers() {
+  return `
+    <div class="fade-in max-w-6xl mx-auto space-y-5">
+      <div class="flex justify-end">
+        <button data-action="open-add-barber" class="flex items-center gap-2 px-5 py-3.5 rounded-xl font-bold text-white bg-rose-700 hover:bg-rose-800">
+          <i data-lucide="user-plus" class="w-5 h-5"></i> Add Barber
+        </button>
+      </div>
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        ${barbers.length ? barbers.map(b => `
+          <div class="bg-white rounded-2xl border border-gray-200 p-5">
+            <div class="flex items-start justify-between mb-4">
+              <div class="flex items-center gap-3">
+                <div class="w-12 h-12 rounded-full bg-gray-100 flex items-center justify-center font-bold text-gray-600">${esc(initials(b.name))}</div>
+                <div>
+                  <div class="font-bold">${esc(b.name)}</div>
+                  <div class="text-sm text-gray-500">${esc(b.phone || 'No phone')}</div>
+                </div>
+              </div>
+              <span class="text-xs font-semibold px-2.5 py-1 rounded-full ${b.active ? 'bg-emerald-50 text-emerald-700' : 'bg-gray-100 text-gray-500'}">${b.active ? 'Active' : 'Inactive'}</span>
+            </div>
+            <div class="flex items-center gap-2">
+              <button data-action="open-edit-barber" data-id="${b.id}" class="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl border border-gray-200 font-semibold text-gray-600 hover:bg-gray-50"><i data-lucide="pencil" class="w-4 h-4"></i> Edit</button>
+              <button data-action="delete-barber" data-id="${b.id}" class="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl border border-gray-200 font-semibold text-red-500 hover:bg-red-50"><i data-lucide="trash-2" class="w-4 h-4"></i> Delete</button>
+            </div>
+          </div>
+        `).join('') : `<div class="col-span-full text-center text-gray-400 py-12">No barbers yet. Add your first barber.</div>`}
+      </div>
+    </div>
+  `;
+}
+
+/* ---------- 6.6 Services ---------- */
+function renderServices() {
+  return `
+    <div class="fade-in max-w-6xl mx-auto space-y-5">
+      <div class="flex justify-end">
+        <button data-action="open-add-service" class="flex items-center gap-2 px-5 py-3.5 rounded-xl font-bold text-white bg-rose-700 hover:bg-rose-800">
+          <i data-lucide="plus" class="w-5 h-5"></i> Add Service
+        </button>
+      </div>
+      <div class="bg-white rounded-2xl border border-gray-200 overflow-hidden">
+        <div class="overflow-x-auto">
+          <table class="w-full text-left">
+            <thead>
+              <tr class="text-xs uppercase text-gray-400 border-b border-gray-100">
+                <th class="px-5 py-3 font-semibold">Service</th>
+                <th class="px-5 py-3 font-semibold">Price</th>
+                <th class="px-5 py-3 font-semibold">Duration</th>
+                <th class="px-5 py-3 font-semibold">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${services.length ? services.map(s => `
+                <tr class="border-b border-gray-50 last:border-0">
+                  <td class="px-5 py-3.5 font-semibold">${esc(s.name)}</td>
+                  <td class="px-5 py-3.5 font-semibold">${money(s.price)}</td>
+                  <td class="px-5 py-3.5 text-gray-500">${s.duration} min</td>
+                  <td class="px-5 py-3.5">
+                    <div class="flex items-center gap-1">
+                      <button data-action="open-edit-service" data-id="${s.id}" class="w-9 h-9 rounded-lg hover:bg-gray-100 flex items-center justify-center text-gray-500" aria-label="Edit service"><i data-lucide="pencil" class="w-4 h-4"></i></button>
+                      <button data-action="delete-service" data-id="${s.id}" class="w-9 h-9 rounded-lg hover:bg-red-50 flex items-center justify-center text-red-500" aria-label="Delete service"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
+                    </div>
+                  </td>
+                </tr>
+              `).join('') : `<tr><td colspan="4" class="px-5 py-12 text-center text-gray-400">No services yet.</td></tr>`}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+/* ---------- 6.7 Reports ---------- */
+function renderReports() {
+  const tabs = [
+    { id: 'daily', label: 'Daily' },
+    { id: 'monthly', label: 'Monthly' },
+    { id: 'yearly', label: 'Yearly' }
+  ];
+
+  let filtered = [];
+  let periodLabel = '';
+  if (reportsState.tab === 'daily') {
+    filtered = orders.filter(o => dayKey(o.date) === reportsState.date);
+    periodLabel = formatDatePretty(reportsState.date + 'T00:00:00');
+  } else if (reportsState.tab === 'monthly') {
+    filtered = orders.filter(o => monthKey(o.date) === reportsState.month);
+    periodLabel = new Date(reportsState.month + '-01').toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+  } else {
+    filtered = orders.filter(o => yearKey(o.date) === reportsState.year);
+    periodLabel = reportsState.year;
+  }
+
+  const rows = barbers.map(b => {
+    const bOrders = filtered.filter(o => o.barberId === b.id);
+    const servicesPerformed = bOrders.reduce((sum, o) => sum + o.serviceIds.length, 0);
+    return {
+      barber: b,
+      revenue: bOrders.reduce((s, o) => s + o.total, 0),
+      customersServed: bOrders.length,
+      servicesPerformed
+    };
+  }).filter(r => r.customersServed > 0 || true); // show all barbers, even with 0 activity
+
+  const totalRevenue = rows.reduce((s, r) => s + r.revenue, 0);
+  const totalCustomers = rows.reduce((s, r) => s + r.customersServed, 0);
+  const totalServices = rows.reduce((s, r) => s + r.servicesPerformed, 0);
+
+  let dateControl = '';
+  if (reportsState.tab === 'daily') {
+    dateControl = `<input type="date" id="report-date" data-action="report-set-date" value="${reportsState.date}" class="px-3 py-3 rounded-xl border border-gray-300 focus:border-rose-700">`;
+  } else if (reportsState.tab === 'monthly') {
+    dateControl = `<input type="month" id="report-month" data-action="report-set-month" value="${reportsState.month}" class="px-3 py-3 rounded-xl border border-gray-300 focus:border-rose-700">`;
+  } else {
+    const years = Array.from(new Set(orders.map(o => yearKey(o.date)))).sort().reverse();
+    if (!years.includes(reportsState.year)) years.unshift(reportsState.year);
+    dateControl = `<select id="report-year" data-action="report-set-year" class="px-3 py-3 rounded-xl border border-gray-300 focus:border-rose-700">
+      ${years.map(y => `<option value="${y}" ${y === reportsState.year ? 'selected' : ''}>${y}</option>`).join('')}
+    </select>`;
+  }
+
+  return `
+    <div class="fade-in max-w-6xl mx-auto space-y-5">
+      <div class="flex flex-wrap items-center justify-between gap-3 no-print">
+        <div class="inline-flex bg-white border border-gray-200 rounded-xl p-1">
+          ${tabs.map(t => `
+            <button data-action="reports-set-tab" data-tab="${t.id}"
+              class="px-5 py-2.5 rounded-lg font-semibold text-sm transition-colors ${reportsState.tab === t.id ? 'bg-rose-700 text-white' : 'text-gray-500 hover:bg-gray-50'}">
+              ${t.label}
+            </button>
+          `).join('')}
+        </div>
+        <div class="flex items-center gap-3">
+          ${dateControl}
+          <button data-action="print-page" class="px-4 py-3 rounded-xl font-semibold text-white bg-gray-900 hover:bg-black flex items-center gap-2">
+            <i data-lucide="printer" class="w-4 h-4"></i> Print
+          </button>
+        </div>
+      </div>
+
+      <div class="bg-white rounded-2xl border border-gray-200 overflow-hidden">
+        <div class="p-5 border-b border-gray-200">
+          <h2 class="font-bold text-lg">Report by Barber — ${esc(periodLabel)}</h2>
+          <p class="text-sm text-gray-500">Revenue, customers served, and services performed</p>
+        </div>
+        <div class="overflow-x-auto">
+          <table class="w-full text-left">
+            <thead>
+              <tr class="text-xs uppercase text-gray-400 border-b border-gray-100">
+                <th class="px-5 py-3 font-semibold">Barber</th>
+                <th class="px-5 py-3 font-semibold">Revenue</th>
+                <th class="px-5 py-3 font-semibold">Customers Served</th>
+                <th class="px-5 py-3 font-semibold">Services Performed</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${rows.length ? rows.map(r => `
+                <tr class="border-b border-gray-50 last:border-0">
+                  <td class="px-5 py-3.5 font-semibold">${esc(r.barber.name)}</td>
+                  <td class="px-5 py-3.5">${money(r.revenue)}</td>
+                  <td class="px-5 py-3.5">${r.customersServed}</td>
+                  <td class="px-5 py-3.5">${r.servicesPerformed}</td>
+                </tr>
+              `).join('') : `<tr><td colspan="4" class="px-5 py-10 text-center text-gray-400">No barbers to report.</td></tr>`}
+            </tbody>
+            <tfoot>
+              <tr class="border-t-2 border-gray-100 font-bold">
+                <td class="px-5 py-3.5">Total</td>
+                <td class="px-5 py-3.5">${money(totalRevenue)}</td>
+                <td class="px-5 py-3.5">${totalCustomers}</td>
+                <td class="px-5 py-3.5">${totalServices}</td>
+              </tr>
+            </tfoot>
+          </table>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+const viewRenderers = {
+  dashboard: renderDashboard,
+  neworder: renderNewOrder,
+  history: renderOrderHistory,
+  customers: renderCustomers,
+  barbers: renderBarbers,
+  services: renderServices,
+  reports: renderReports
+};
+
+/* -------------------------------------------------------------------------
+   7. MODAL RENDERERS
+   ------------------------------------------------------------------------- */
+function openModal(html) {
+  document.getElementById('modal-root').innerHTML = `
+    <div id="modal-backdrop" class="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50 fade-in">
+      <div class="bg-white rounded-2xl w-full max-w-md max-h-[90vh] overflow-y-auto">
+        ${html}
+      </div>
+    </div>
+  `;
+  if (window.lucide) lucide.createIcons();
+}
+function closeModal() {
+  document.getElementById('modal-root').innerHTML = '';
+}
+
+function modalShell(title, bodyHTML, footerHTML) {
+  return `
+    <div class="p-6 border-b border-gray-100 flex items-center justify-between">
+      <h3 class="text-lg font-bold">${esc(title)}</h3>
+      <button data-action="close-modal" class="w-9 h-9 rounded-lg hover:bg-gray-100 flex items-center justify-center text-gray-400"><i data-lucide="x" class="w-5 h-5"></i></button>
+    </div>
+    <div class="p-6 space-y-4">${bodyHTML}</div>
+    <div class="p-6 pt-0 flex items-center gap-3">${footerHTML}</div>
+  `;
+}
+
+function openBarberModal(id) {
+  const b = id ? getBarber(id) : null;
+  const body = `
+    <div>
+      <label class="block text-sm font-semibold text-gray-600 mb-2">Name</label>
+      <input type="text" id="f-barber-name" value="${esc(b ? b.name : '')}" placeholder="Barber name" class="w-full px-4 py-3.5 rounded-xl border border-gray-300 text-lg focus:border-rose-700">
+    </div>
+    <div>
+      <label class="block text-sm font-semibold text-gray-600 mb-2">Phone</label>
+      <input type="tel" id="f-barber-phone" value="${esc(b ? b.phone : '')}" placeholder="Phone number" class="w-full px-4 py-3.5 rounded-xl border border-gray-300 text-lg focus:border-rose-700">
+    </div>
+    <label class="flex items-center gap-3 cursor-pointer">
+      <input type="checkbox" id="f-barber-active" ${!b || b.active ? 'checked' : ''} class="w-5 h-5 rounded accent-rose-700">
+      <span class="font-semibold text-gray-700">Active</span>
+    </label>
+  `;
+  const footer = `
+    <button data-action="close-modal" class="flex-1 py-3.5 rounded-xl font-semibold text-gray-600 hover:bg-gray-100 border border-gray-200">Cancel</button>
+    <button data-action="save-barber" data-id="${b ? b.id : ''}" class="flex-1 py-3.5 rounded-xl font-bold text-white bg-rose-700 hover:bg-rose-800">Save</button>
+  `;
+  openModal(modalShell(b ? 'Edit Barber' : 'Add Barber', body, footer));
+}
+
+function openServiceModal(id) {
+  const s = id ? getService(id) : null;
+  const body = `
+    <div>
+      <label class="block text-sm font-semibold text-gray-600 mb-2">Service Name</label>
+      <input type="text" id="f-service-name" value="${esc(s ? s.name : '')}" placeholder="e.g. Classic Haircut" class="w-full px-4 py-3.5 rounded-xl border border-gray-300 text-lg focus:border-rose-700">
+    </div>
+    <div class="grid grid-cols-2 gap-3">
+      <div>
+        <label class="block text-sm font-semibold text-gray-600 mb-2">Price</label>
+        <input type="number" min="0" step="0.01" id="f-service-price" value="${s ? s.price : ''}" placeholder="0.00" class="w-full px-4 py-3.5 rounded-xl border border-gray-300 text-lg focus:border-rose-700">
+      </div>
+      <div>
+        <label class="block text-sm font-semibold text-gray-600 mb-2">Duration (min)</label>
+        <input type="number" min="0" step="1" id="f-service-duration" value="${s ? s.duration : ''}" placeholder="30" class="w-full px-4 py-3.5 rounded-xl border border-gray-300 text-lg focus:border-rose-700">
+      </div>
+    </div>
+  `;
+  const footer = `
+    <button data-action="close-modal" class="flex-1 py-3.5 rounded-xl font-semibold text-gray-600 hover:bg-gray-100 border border-gray-200">Cancel</button>
+    <button data-action="save-service" data-id="${s ? s.id : ''}" class="flex-1 py-3.5 rounded-xl font-bold text-white bg-rose-700 hover:bg-rose-800">Save</button>
+  `;
+  openModal(modalShell(s ? 'Edit Service' : 'Add Service', body, footer));
+}
+
+function openCustomerModal(id) {
+  const c = id ? getCustomer(id) : null;
+  const body = `
+    <div>
+      <label class="block text-sm font-semibold text-gray-600 mb-2">Name</label>
+      <input type="text" id="f-customer-name" value="${esc(c ? c.name : '')}" placeholder="Customer name" class="w-full px-4 py-3.5 rounded-xl border border-gray-300 text-lg focus:border-rose-700">
+    </div>
+    <div>
+      <label class="block text-sm font-semibold text-gray-600 mb-2">Phone</label>
+      <input type="tel" id="f-customer-phone" value="${esc(c ? c.phone : '')}" placeholder="Phone number" class="w-full px-4 py-3.5 rounded-xl border border-gray-300 text-lg focus:border-rose-700">
+    </div>
+  `;
+  const footer = `
+    <button data-action="close-modal" class="flex-1 py-3.5 rounded-xl font-semibold text-gray-600 hover:bg-gray-100 border border-gray-200">Cancel</button>
+    <button data-action="save-customer" data-id="${c ? c.id : ''}" class="flex-1 py-3.5 rounded-xl font-bold text-white bg-rose-700 hover:bg-rose-800">Save</button>
+  `;
+  openModal(modalShell(c ? 'Edit Customer' : 'Add Customer', body, footer));
+}
+
+function openEditOrderModal(id) {
+  const o = orders.find(x => x.id === id);
+  if (!o) return;
+  const body = `
+    <div>
+      <label class="block text-sm font-semibold text-gray-600 mb-2">Barber</label>
+      <select id="f-order-barber" class="w-full px-4 py-3.5 rounded-xl border border-gray-300 text-lg focus:border-rose-700">
+        ${barbers.map(b => `<option value="${b.id}" ${o.barberId === b.id ? 'selected' : ''}>${esc(b.name)}</option>`).join('')}
+      </select>
+    </div>
+    <div>
+      <label class="block text-sm font-semibold text-gray-600 mb-2">Services</label>
+      <div class="space-y-2 max-h-44 overflow-y-auto border border-gray-200 rounded-xl p-3">
+        ${services.map(s => `
+          <label class="flex items-center justify-between gap-2 cursor-pointer">
+            <span class="flex items-center gap-2">
+              <input type="checkbox" class="f-order-service w-5 h-5 rounded accent-rose-700" value="${s.id}" ${o.serviceIds.includes(s.id) ? 'checked' : ''}>
+              <span class="font-medium">${esc(s.name)}</span>
+            </span>
+            <span class="text-gray-500 text-sm">${money(s.price)}</span>
+          </label>
+        `).join('')}
+      </div>
+    </div>
+    ${!o.customerId ? `
+    <div>
+      <label class="block text-sm font-semibold text-gray-600 mb-2">Walk-in Name</label>
+      <input type="text" id="f-order-customer-name" value="${esc(o.customerName)}" class="w-full px-4 py-3.5 rounded-xl border border-gray-300 text-lg focus:border-rose-700">
+    </div>` : `
+    <div>
+      <label class="block text-sm font-semibold text-gray-600 mb-2">Customer</label>
+      <div class="px-4 py-3.5 rounded-xl bg-gray-50 text-gray-600 font-medium">${esc(o.customerName)}</div>
+    </div>`}
+    <div>
+      <label class="block text-sm font-semibold text-gray-600 mb-2">Payment Method</label>
+      <select id="f-order-payment" class="w-full px-4 py-3.5 rounded-xl border border-gray-300 text-lg focus:border-rose-700">
+        ${Object.entries(PAYMENT_LABELS).map(([k, v]) => `<option value="${k}" ${o.paymentMethod === k ? 'selected' : ''}>${v}</option>`).join('')}
+      </select>
+    </div>
+  `;
+  const footer = `
+    <button data-action="close-modal" class="flex-1 py-3.5 rounded-xl font-semibold text-gray-600 hover:bg-gray-100 border border-gray-200">Cancel</button>
+    <button data-action="save-order" data-id="${o.id}" class="flex-1 py-3.5 rounded-xl font-bold text-white bg-rose-700 hover:bg-rose-800">Save Changes</button>
+  `;
+  openModal(modalShell('Edit Order', body, footer));
+}
+
+function openSettingsModal() {
+  const body = `
+    <div>
+      <label class="block text-sm font-semibold text-gray-600 mb-2">Shop Name</label>
+      <input type="text" id="f-settings-shopname" value="${esc(settings.shopName)}" class="w-full px-4 py-3.5 rounded-xl border border-gray-300 text-lg focus:border-rose-700">
+    </div>
+    <div>
+      <label class="block text-sm font-semibold text-gray-600 mb-2">Currency Symbol</label>
+      <input type="text" id="f-settings-currency" maxlength="3" value="${esc(settings.currencySymbol)}" class="w-full px-4 py-3.5 rounded-xl border border-gray-300 text-lg focus:border-rose-700">
+    </div>
+    <div class="border-t border-gray-100 pt-4">
+      <button data-action="reset-sample-data" class="w-full flex items-center justify-center gap-2 py-3 rounded-xl font-semibold text-gray-500 border border-gray-200 hover:bg-gray-50">
+        <i data-lucide="refresh-ccw" class="w-4 h-4"></i> Restore Sample Data
+      </button>
+      <p class="text-xs text-gray-400 mt-2">Use this only if your data looks empty or broken. It replaces everything with fresh sample data.</p>
+    </div>
+  `;
+  const footer = `
+    <button data-action="close-modal" class="flex-1 py-3.5 rounded-xl font-semibold text-gray-600 hover:bg-gray-100 border border-gray-200">Cancel</button>
+    <button data-action="save-settings" class="flex-1 py-3.5 rounded-xl font-bold text-white bg-rose-700 hover:bg-rose-800">Save</button>
+  `;
+  openModal(modalShell('Shop Settings', body, footer));
+}
+
+function confirmDialog(message, onConfirm, confirmLabel) {
+  const body = `<p class="text-gray-600">${esc(message)}</p>`;
+  const footer = `
+    <button data-action="close-modal" class="flex-1 py-3.5 rounded-xl font-semibold text-gray-600 hover:bg-gray-100 border border-gray-200">Cancel</button>
+    <button id="confirm-action-btn" class="flex-1 py-3.5 rounded-xl font-bold text-white bg-red-600 hover:bg-red-700">${esc(confirmLabel || 'Delete')}</button>
+  `;
+  openModal(modalShell('Are you sure?', body, footer));
+  document.getElementById('confirm-action-btn').addEventListener('click', () => {
+    onConfirm();
+    closeModal();
+  });
+}
+
+/* -------------------------------------------------------------------------
+   8. EVENT DELEGATION
+   ------------------------------------------------------------------------- */
+document.addEventListener('click', function (e) {
+  if (e.target && e.target.id === 'modal-backdrop') { closeModal(); return; }
+
+  const btn = e.target.closest('[data-action]');
+  if (!btn) return;
+  const action = btn.dataset.action;
+
+  switch (action) {
+    case 'nav':
+      navigate(btn.dataset.view);
+      break;
+    case 'start-new-order':
+      startNewOrder();
+      break;
+    case 'close-modal':
+      closeModal();
+      break;
+    case 'open-settings':
+      openSettingsModal();
+      break;
+    case 'reset-sample-data':
+      closeModal();
+      confirmDialog('This replaces all current barbers, services, customers, and orders with fresh sample data. This cannot be undone. Continue?', () => {
+        forceReseed();
+        applyShopBranding();
+      }, 'Restore');
+      break;
+    case 'print-page':
+      window.print();
+      break;
+
+    /* ---- Wizard ---- */
+    case 'wizard-select-barber':
+      wizard.barberId = btn.dataset.id;
+      wizard.step = 2;
+      renderView();
+      break;
+    case 'wizard-toggle-service': {
+      const id = btn.dataset.id;
+      const idx = wizard.serviceIds.indexOf(id);
+      if (idx >= 0) wizard.serviceIds.splice(idx, 1); else wizard.serviceIds.push(id);
+      renderView();
+      break;
+    }
+    case 'wizard-next':
+      if (wizard.step < 4) wizard.step += 1;
+      renderView();
+      break;
+    case 'wizard-back':
+      if (wizard.step > 1) wizard.step -= 1;
+      renderView();
+      break;
+    case 'wizard-cancel':
+      resetWizard();
+      navigate('dashboard');
+      break;
+    case 'wizard-set-customer-mode':
+      wizard.customerMode = btn.dataset.mode;
+      renderView();
+      break;
+    case 'wizard-select-customer':
+      wizard.customerId = btn.dataset.id;
+      renderView();
+      break;
+    case 'wizard-select-payment':
+      wizard.paymentMethod = btn.dataset.payment;
+      renderView();
+      break;
+    case 'wizard-complete':
+      if (wizard.paymentMethod) completeOrder();
+      break;
+    case 'wizard-restart':
+      resetWizard();
+      currentView = 'neworder';
+      renderView();
+      break;
+
+    /* ---- Barbers ---- */
+    case 'open-add-barber':
+      openBarberModal();
+      break;
+    case 'open-edit-barber':
+      openBarberModal(btn.dataset.id);
+      break;
+    case 'delete-barber':
+      confirmDialog('This will permanently delete this barber. Continue?', () => { deleteBarber(btn.dataset.id); renderView(); });
+      break;
+    case 'save-barber': {
+      const name = document.getElementById('f-barber-name').value.trim();
+      const phone = document.getElementById('f-barber-phone').value.trim();
+      const active = document.getElementById('f-barber-active').checked;
+      if (!name) return;
+      const id = btn.dataset.id;
+      if (id) updateBarber(id, { name, phone, active }); else addBarber({ name, phone, active });
+      closeModal();
+      renderView();
+      break;
+    }
+
+    /* ---- Services ---- */
+    case 'open-add-service':
+      openServiceModal();
+      break;
+    case 'open-edit-service':
+      openServiceModal(btn.dataset.id);
+      break;
+    case 'delete-service':
+      confirmDialog('This will permanently delete this service. Continue?', () => { deleteService(btn.dataset.id); renderView(); });
+      break;
+    case 'save-service': {
+      const name = document.getElementById('f-service-name').value.trim();
+      const price = document.getElementById('f-service-price').value;
+      const duration = document.getElementById('f-service-duration').value;
+      if (!name || price === '' || duration === '') return;
+      const id = btn.dataset.id;
+      if (id) updateService(id, { name, price, duration }); else addService({ name, price, duration });
+      closeModal();
+      renderView();
+      break;
+    }
+
+    /* ---- Customers ---- */
+    case 'open-add-customer':
+      openCustomerModal();
+      break;
+    case 'open-edit-customer':
+      openCustomerModal(btn.dataset.id);
+      break;
+    case 'delete-customer':
+      confirmDialog('This will permanently delete this customer record. Continue?', () => { deleteCustomer(btn.dataset.id); renderView(); });
+      break;
+    case 'save-customer': {
+      const name = document.getElementById('f-customer-name').value.trim();
+      const phone = document.getElementById('f-customer-phone').value.trim();
+      if (!name) return;
+      const id = btn.dataset.id;
+      if (id) updateCustomer(id, { name, phone }); else addCustomer({ name, phone });
+      closeModal();
+      renderView();
+      break;
+    }
+
+    /* ---- Orders ---- */
+    case 'open-edit-order':
+      openEditOrderModal(btn.dataset.id);
+      break;
+    case 'delete-order':
+      confirmDialog('This will permanently delete this order and adjust customer stats. Continue?', () => { deleteOrder(btn.dataset.id); renderView(); });
+      break;
+    case 'save-order': {
+      const id = btn.dataset.id;
+      const barberId = document.getElementById('f-order-barber').value;
+      const serviceIds = Array.from(document.querySelectorAll('.f-order-service:checked')).map(el => el.value);
+      const paymentMethod = document.getElementById('f-order-payment').value;
+      const nameInput = document.getElementById('f-order-customer-name');
+      const customerName = nameInput ? nameInput.value.trim() : undefined;
+      if (!barberId || serviceIds.length === 0) return;
+      updateOrder(id, { barberId, serviceIds, paymentMethod, customerName });
+      closeModal();
+      renderView();
+      break;
+    }
+
+    /* ---- Settings ---- */
+    case 'save-settings': {
+      const shopName = document.getElementById('f-settings-shopname').value.trim();
+      const currencySymbol = document.getElementById('f-settings-currency').value.trim();
+      settings.shopName = shopName || settings.shopName;
+      settings.currencySymbol = currencySymbol || settings.currencySymbol;
+      persistAll();
+      closeModal();
+      applyShopBranding();
+      renderView();
+      break;
+    }
+
+    /* ---- Reports tabs ---- */
+    case 'reports-set-tab':
+      reportsState.tab = btn.dataset.tab;
+      renderView();
+      break;
+
+    /* ---- History filters ---- */
+    case 'clear-history-filters':
+      historyFilters = { search: '', barberId: '', dateFrom: '', dateTo: '' };
+      renderView();
+      break;
+  }
+});
+
+document.addEventListener('input', function (e) {
+  const action = e.target.dataset.action;
+  if (!action) return;
+  switch (action) {
+    case 'filter-history-search':
+      historyFilters.search = e.target.value;
+      preserveFocus(renderView);
+      break;
+    case 'filter-customer-search':
+      customerSearch = e.target.value;
+      preserveFocus(renderView);
+      break;
+    case 'wizard-search-customer':
+      wizardCustomerSearch = e.target.value;
+      preserveFocus(renderView);
+      break;
+    case 'wizard-set-walkin-name':
+      wizard.walkinName = e.target.value;
+      break;
+    case 'wizard-set-new-name':
+      wizard.newCustomerName = e.target.value;
+      preserveFocus(renderView);
+      break;
+    case 'wizard-set-new-phone':
+      wizard.newCustomerPhone = e.target.value;
+      break;
+  }
+});
+
+document.addEventListener('change', function (e) {
+  const action = e.target.dataset.action;
+  if (!action) return;
+  switch (action) {
+    case 'filter-history-barber':
+      historyFilters.barberId = e.target.value;
+      renderView();
+      break;
+    case 'filter-history-from':
+      historyFilters.dateFrom = e.target.value;
+      renderView();
+      break;
+    case 'filter-history-to':
+      historyFilters.dateTo = e.target.value;
+      renderView();
+      break;
+    case 'report-set-date':
+      reportsState.date = e.target.value;
+      renderView();
+      break;
+    case 'report-set-month':
+      reportsState.month = e.target.value;
+      renderView();
+      break;
+    case 'report-set-year':
+      reportsState.year = e.target.value;
+      renderView();
+      break;
+  }
+});
+
+/* -------------------------------------------------------------------------
+   9. INIT
+   ------------------------------------------------------------------------- */
+function applyShopBranding() {
+  document.getElementById('shop-name-label').textContent = settings.shopName || 'Barber Shop';
+  document.title = (settings.shopName || 'Barber Shop') + ' — Shop Manager';
+}
+function updateTopbarDate() {
+  const el = document.getElementById('topbar-date');
+  if (el) el.textContent = new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' });
+}
+
+function init() {
+  seedIfEmpty();
+  applyShopBranding();
+  updateTopbarDate();
+  renderView();
+}
+
+init();
+</script>
+</body>
+</html>
