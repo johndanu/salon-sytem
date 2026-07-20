@@ -636,16 +636,16 @@ function renderDashboard() {
 
   return `
     <div class="fade-in space-y-6 max-w-6xl mx-auto">
-      <div class="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4">
+      <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4">
         ${statCards.map(c => `
-          <div class="bg-white rounded-2xl border border-gray-200 p-5">
-            <div class="flex items-center justify-between mb-3">
-              <div class="w-10 h-10 rounded-xl bg-rose-50 flex items-center justify-center">
-                <i data-lucide="${c.icon}" class="w-5 h-5 text-rose-700"></i>
-              </div>
+          <div class="bg-white rounded-2xl border border-gray-200 p-4 sm:p-5 flex sm:block items-center gap-4">
+            <div class="w-11 h-11 sm:w-10 sm:h-10 rounded-xl bg-rose-50 flex items-center justify-center shrink-0 sm:mb-3">
+              <i data-lucide="${c.icon}" class="w-5 h-5 text-rose-700"></i>
             </div>
-            <div class="text-2xl font-bold text-gray-900 truncate" title="${esc(c.value)}">${esc(c.value)}</div>
-            <div class="text-sm text-gray-500 mt-1">${esc(c.label)}</div>
+            <div class="min-w-0">
+              <div class="text-xl sm:text-2xl font-bold text-gray-900 truncate" title="${esc(c.value)}">${esc(c.value)}</div>
+              <div class="text-sm text-gray-500 sm:mt-1">${esc(c.label)}</div>
+            </div>
           </div>
         `).join('')}
       </div>
